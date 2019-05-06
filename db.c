@@ -151,9 +151,10 @@ typedef struct Statement_t Statement;
 
 enum PrepareResult_t {
   PREPARE_SUCCESS,
+  PREPARE_NEGATIVE_ID,
+  PREPARE_STRING_TOO_LONG,
   PREPARE_UNRECOGNIZED_STATEMENT,
   PREPARE_SYNTAX_ERROR,
-  PREPARE_STRING_TOO_LONG,
 };
 typedef enum PrepareResult_t PrepareResult;
 
@@ -163,6 +164,12 @@ PrepareResult prepare_insert(InputBuffer* input_buffer, Statement* statement) {
   char* id_str = strtok(NULL, " ");
   char* username = strtok(NULL, " ");
   char* email = strtok(NULL, " ");
+
+  int id = atoi(id_str);
+
+  if (id < 0) {
+    return PREPARE_NEGATIVE_ID;
+  }
 
   if (id_str == NULL || username == NULL || email == NULL) {
     return PREPARE_SYNTAX_ERROR;
@@ -260,14 +267,17 @@ int main(int argc, char* argv[]) {
     switch (prepare_statement(input_buffer, &statement)) {
       case PREPARE_SUCCESS:
         break;
+      case PREPARE_STRING_TOO_LONG:
+        printf("String is too long.\n");
+        continue;
+      case PREPARE_NEGATIVE_ID:
+        printf("ID must be positive.\n");
+        continue;
       case PREPARE_UNRECOGNIZED_STATEMENT:
         printf("Unrecognized statement: '%s'.\n", input_buffer->buffer);
         continue;
       case PREPARE_SYNTAX_ERROR:
         printf("Syntax error. Could not parse statement '%s'.\n", input_buffer->buffer);
-        continue;
-      case PREPARE_STRING_TOO_LONG:
-        printf("String is too long.\n");
         continue;
     }
 
