@@ -60,8 +60,8 @@ MetaCommandResult do_meta_command(InputBuffer* input_buffer) {
 
 struct Row_t {
   uint32_t id;
-  char username[COLUMN_USERNAME_SIZE];
-  char email[COLUMN_EMAIL_SIZE];
+  char username[COLUMN_USERNAME_SIZE + 1];
+  char email[COLUMN_EMAIL_SIZE + 1];
 };
 typedef struct Row_t Row;
 
@@ -248,7 +248,7 @@ int main(int argc, char* argv[]) {
         printf("Executed.\n");
         break;
       case EXECUTE_TABLE_FULL:
-        printf("Error: Table full\n");
+        printf("Error: Table full.\n");
         break;
     }
   }

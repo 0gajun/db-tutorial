@@ -26,4 +26,32 @@ describe 'database' do
       'db > ',
     ])
   end
+
+  it 'prints error message when table is full' do
+    MAX_PAGE_NUM = 100.freeze
+    ROWS_IN_PAGE = 14.freeze
+    script = (1..(MAX_PAGE_NUM* ROWS_IN_PAGE + 1)).map do |i|
+      "insert #{i} user#{i} person#{i}@example.com"
+    end
+    script << '.exit'
+    result = run_script(script)
+    expect(result[-2]).to eq('db > Error: Table full.')
+  end
+
+  it 'allows inserting strings that are maximum length' do
+    long_username = 'u' * 32
+    long_email = 'e' * 255
+    script = [
+      "insert 1 #{long_username} #{long_email}",
+      'select',
+      '.exit',
+    ]
+    result = run_script(script)
+    expect(result).to match_array([
+      'db > Executed.',
+      "db > (1, #{long_username}, #{long_email})",
+      'Executed.',
+      'db > ',
+    ])
+  end
 end
