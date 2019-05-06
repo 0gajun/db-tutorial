@@ -3,3 +3,6 @@ db: db.c
 
 run: db
 	./db
+
+test: db
+	bundle exec rspec ./spec/*.rb

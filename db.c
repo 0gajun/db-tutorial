@@ -66,7 +66,7 @@ struct Row_t {
 typedef struct Row_t Row;
 
 void print_row(Row* row) {
-  printf("%d %s %s\n", row->id, row->username, row->email);
+  printf("(%d, %s, %s)\n", row->id, row->username, row->email);
 }
 
 #define size_of_attribute(Struct, Attribute) sizeof(((Struct*)0)->Attribute)
@@ -245,7 +245,7 @@ int main(int argc, char* argv[]) {
 
     switch (execute_statement(&statement, table)) {
       case EXECUTE_SUCCESS:
-        printf("Executed\n");
+        printf("Executed.\n");
         break;
       case EXECUTE_TABLE_FULL:
         printf("Error: Table full\n");
