@@ -229,6 +229,46 @@ void* row_slot(Table* table, uint32_t row_num) {
   return page + byte_offset;
 }
 
+struct Cursor_t {
+  Table *table;
+  uint32_t row_num;
+  bool end_of_table; // Indicates a position one past the last element
+};
+typedef struct Cursor_t Cursor;
+
+Cursor* table_start(Table* table) {
+  Cursor* cursor = malloc(sizeof(Cursor));
+  cursor->table = table;
+  cursor->row_num = 0;
+  cursor->end_of_table = (table->num_rows == 0);
+
+  return cursor;
+}
+
+Cursor* table_end(Table* table) {
+  Cursor* cursor = malloc(sizeof(Cursor));
+  cursor->table = table;
+  cursor->row_num = table->num_rows;
+  cursor->end_of_table = true;
+}
+
+void cursor_advance(Cursor* cursor) {
+  cursor->row_num++;
+  if (cursor->row_num >= cursor->table->num_rows) {
+    cursor->end_of_table = true;
+  }
+}
+
+void* cursor_value(Cursor* cursor) {
+  uint32_t page_idx = cursor->row_num / ROWS_PER_PAGE;
+  void* page = get_page(cursor->table->pager, page_idx);
+
+  uint32_t row_idx_in_page = cursor->row_num % ROWS_PER_PAGE;
+  uint32_t row_byte_offset_in_page = ROW_SIZE * row_idx_in_page;
+
+  return page + row_byte_offset_in_page;
+}
+
 enum StatementType_t {
   STATEMENT_INSERT,
   STATEMENT_SELECT,
@@ -309,21 +349,26 @@ ExecuteResult execute_insert(Statement* statement, Table* table) {
     return EXECUTE_TABLE_FULL;
   }
 
-  void* slot = row_slot(table, table->num_rows);
-  seriarize_row(&(statement->row_to_insert), slot);
+  Cursor* cursor = table_end(table);
+  seriarize_row(&(statement->row_to_insert), cursor_value(cursor));
 
   table->num_rows++;
+
+  free(cursor);
 
   return EXECUTE_SUCCESS;
 }
 
 ExecuteResult execute_select(Statement* statement, Table* table) {
   Row row;
-  for (int i = 0; i < table->num_rows; i++) {
-    void* slot = row_slot(table, i);
-    deseriarize_row(slot, &row);
+  Cursor *cursor = table_start(table);
+  while(!(cursor->end_of_table)) {
+    deseriarize_row(cursor_value(cursor), &row);
     print_row(&row);
+    cursor_advance(cursor);
   }
+
+  free(cursor);
 
   return EXECUTE_SUCCESS;
 }
