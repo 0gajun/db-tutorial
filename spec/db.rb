@@ -139,10 +139,10 @@ describe 'database' do
       'db > Executed.',
       'db > Executed.',
       'db > Tree:',
-      'leaf (size 3)',
-      ' - 0 : 1',
-      ' - 1 : 2',
-      ' - 2 : 3',
+      '- leaf (size 3)',
+      "\t- 1",
+      "\t- 2",
+      "\t- 3",
       'db > ',
     ])
   end
@@ -160,6 +160,40 @@ describe 'database' do
       'db > (1, user1, person1@example.com)',
       'Executed.',
       'db > ',
+    ])
+  end
+
+  it 'allows printing out the structure of a 3-leaf-node btree' do
+    script = (1..14).map do |i|
+      "insert #{i} user#{i} person#{i}@example.com"
+    end
+    script << '.btree'
+    script << 'insert 15 user15 person15@example.com'
+    script << '.exit'
+
+    result = run_script(script)
+
+    expect(result[14...(result.length)]).to match_array([
+      'db > Tree:',
+      '- internal (size 1)',
+      "\t- leaf (size 7)",
+      "\t\t- 1",
+      "\t\t- 2",
+      "\t\t- 3",
+      "\t\t- 4",
+      "\t\t- 5",
+      "\t\t- 6",
+      "\t\t- 7",
+      "\t- key 7",
+      "\t- leaf (size 7)",
+      "\t\t- 8",
+      "\t\t- 9",
+      "\t\t- 10",
+      "\t\t- 11",
+      "\t\t- 12",
+      "\t\t- 13",
+      "\t\t- 14",
+      'db > Need to implement searching an internal node'
     ])
   end
 end
